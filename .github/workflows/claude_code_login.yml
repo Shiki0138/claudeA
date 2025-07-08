@@ -6,7 +6,6 @@ on:
       code:
         description: 'Authorization code (leave empty for step 1)'
         required: false
-  push:
 
 permissions:
   actions: write
@@ -22,7 +21,7 @@ jobs:
           code: ${{ inputs.code }}
           secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
 
-      - name: Upload credentials.json as artifact
+      - name: Upload Claude credentials as artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
