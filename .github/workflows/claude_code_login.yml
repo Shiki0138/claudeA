@@ -17,6 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: grll/claude-code-login@v1
+
+ - name: Upload Claude credentials as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-credentials
+          path: credentials.json
+      
         with:
           code: ${{ inputs.code }}
           secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
