@@ -6,7 +6,8 @@ on:
       code:
         description: 'Authorization code (leave empty for step 1)'
         required: false
-
+  push:
+  
 permissions:
   actions: write  # Required for cache and artifacts
   contents: read  # Required for basic repository access
