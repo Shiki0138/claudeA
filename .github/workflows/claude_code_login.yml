@@ -9,8 +9,8 @@ on:
   push:
 
 permissions:
-  actions: write  # Required for cache and artifacts
-  contents: read  # Required for basic repository access
+  actions: write
+  contents: read
 
 jobs:
   auth:
@@ -22,7 +22,8 @@ jobs:
           code: ${{ inputs.code }}
           secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
 
-      - name: Upload Claude credentials as artifact
+      - name: Upload credentials.json as artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: claude-credentials
