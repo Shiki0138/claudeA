@@ -27,3 +27,10 @@ jobs:
         with:
           name: claude-credentials
           path: credentials.json
+
+      - name: 🔍 Show credentials.json in log
+        if: success()
+        run: |
+          echo "===== BEGIN credentials.json ====="
+          cat credentials.json
+          echo "===== END credentials.json ====="
