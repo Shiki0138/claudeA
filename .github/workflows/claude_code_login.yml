@@ -8,7 +8,7 @@ on:
         required: false
 
 permissions:
-  actions: write  # Required for cache management
+  actions: write  # Required for cache and artifacts
   contents: read  # Required for basic repository access
 
 jobs:
@@ -19,3 +19,10 @@ jobs:
         with:
           code: ${{ inputs.code }}
           secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
+
+      # ✅ 追加：認証後の credentials.json を Artifact として保存
+      - name: Upload Claude credentials as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: claude-credentials
+          path: credentials.json
