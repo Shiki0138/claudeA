@@ -1,36 +1,51 @@
-name: Claude OAuth
+name: Claude OAuth Login            # ワークフロー名（お好みで変更可）
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:                # 手動実行トリガ
     inputs:
       code:
-        description: 'Authorization code (leave empty for step 1)'
+        description: 'Step 2 で貼り付ける認可コード（Step 1 では空欄のまま）'
         required: false
 
 permissions:
-  actions: write
+  actions: write                    # cache / artifact / secrets 用
   contents: read
 
 jobs:
   auth:
     runs-on: ubuntu-latest
+
     steps:
+      # 1) OAuth フロー本体
       - name: Claude OAuth Login
+        id: login
         uses: grll/claude-code-login@v1
         with:
           code: ${{ inputs.code }}
           secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
 
-        - name: Upload Claude credentials as artifact
+      # 2) credentials.json が生成されているかチェック
+      - name: Verify credentials.json exists
+        if: success()
+        run: |
+          if [ ! -f "${{ github.action_path }}/credentials.json" ]; then
+            echo "credentials.json が見つかりません"
+            exit 1
+          fi
+          echo "credentials.json found ✅"
+
+      # 3) アーティファクトとしてアップロード
+      - name: Upload credentials.json as artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: claude-credentials
           path: ${{ github.action_path }}/credentials.json
 
+      # 4) ログに安全にダンプ（必要ならここを削除してもOK）
       - name: Dump credentials.json to log
         if: success()
         run: |
           echo "===== BEGIN credentials.json ====="
-          cat credentials.json
+          cat "${{ github.action_path }}/credentials.json"
           echo "===== END credentials.json ====="
