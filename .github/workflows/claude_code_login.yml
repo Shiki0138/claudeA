@@ -4,57 +4,50 @@ on:
   workflow_dispatch:
     inputs:
       code:
-        description: 'Step 2 で貼る認可コード（Step 1 では空欄）'
+        description: 'Step 2 で貼る認可コード（Step 1 は空欄）'
         required: false
 
 permissions:
-  actions: write    # cache / artifact / secrets
+  actions: write          # artifact・secrets
   contents: read
 
 jobs:
   auth:
     runs-on: ubuntu-latest
     steps:
-      #── Claude OAuth フロー（Step 1 / Step 2 共通）
+      # 1️⃣ OAuth フロー（成功でも exit 1 が返るので無視）
       - name: Claude OAuth Login
         id: login
         uses: grll/claude-code-login@v1
+        continue-on-error: true
         with:
           code: ${{ inputs.code }}
           secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
 
-      #── credentials.json の場所を特定
+      # 2️⃣ credentials.json のパス特定
       - name: Locate credentials.json
-        if: success()
+        if: always()
         run: |
-          FILE=$(find $GITHUB_WORKSPACE -name credentials.json | head -n1)
+          FILE=$(find "$GITHUB_WORKSPACE" -name credentials.json | head -n1)
           if [ -z "$FILE" ]; then
-            echo "❌ credentials.json not found"
+            echo "::error::credentials.json not found"
             exit 1
           fi
-          echo "CRED_PATH=$FILE" >> $GITHUB_ENV
+          echo "CRED_PATH=$FILE" >> "$GITHUB_ENV"
           echo "credentials.json located at: $FILE"
 
-      #── Artifact に添付
+      # 3️⃣ Artifact に添付（zip でダウンロード可）
       - name: Upload credentials as artifact
-        if: success()
+        if: always() && env.CRED_PATH != ''
         uses: actions/upload-artifact@v4
         with:
           name: claude-credentials
           path: ${{ env.CRED_PATH }}
 
-      #── ログにも出力（ペースト用）
+      # 4️⃣ ログにもダンプ（コピー＆ペースト用）
       - name: Dump credentials.json to log
-        if: success()
+        if: always() && env.CRED_PATH != ''
         run: |
           echo "===== BEGIN credentials.json ====="
           cat "$CRED_PATH"
           echo "===== END credentials.json ====="
-
-   - name: Dump credentials.json to log
-     if: always()
-     run: |
-       FILE=$(find $GITHUB_WORKSPACE -name credentials.json | head -n1)
-       echo "===== BEGIN credentials.json ====="
-       cat "$FILE"
-       echo "===== END credentials.json ====="
