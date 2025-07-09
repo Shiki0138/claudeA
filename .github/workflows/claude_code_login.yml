@@ -1,22 +1,21 @@
-name: Claude OAuth Login            # ワークフロー名（お好みで変更可）
+name: Claude OAuth Login
 
 on:
-  workflow_dispatch:                # 手動実行トリガ
+  workflow_dispatch:
     inputs:
       code:
-        description: 'Step 2 で貼り付ける認可コード（Step 1 では空欄のまま）'
+        description: 'Step 2 で貼る認可コード（Step 1 では空欄）'
         required: false
 
 permissions:
-  actions: write                    # cache / artifact / secrets 用
+  actions: write    # cache / artifact / secrets
   contents: read
 
 jobs:
   auth:
     runs-on: ubuntu-latest
-
     steps:
-      # 1) OAuth フロー本体
+      #── Claude OAuth フロー（Step 1 / Step 2 共通）
       - name: Claude OAuth Login
         id: login
         uses: grll/claude-code-login@v1
@@ -24,35 +23,30 @@ jobs:
           code: ${{ inputs.code }}
           secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
 
-      # 2) credentials.json が生成されているかチェック
-      - name: Verify credentials.json exists
+      #── credentials.json の場所を特定
+      - name: Locate credentials.json
         if: success()
         run: |
-          if [ ! -f "${{ github.action_path }}/credentials.json" ]; then
-            echo "credentials.json が見つかりません"
+          FILE=$(find $GITHUB_WORKSPACE -name credentials.json | head -n1)
+          if [ -z "$FILE" ]; then
+            echo "❌ credentials.json not found"
             exit 1
           fi
-          echo "credentials.json found ✅"
+          echo "CRED_PATH=$FILE" >> $GITHUB_ENV
+          echo "credentials.json located at: $FILE"
 
-      # 3) アーティファクトとしてアップロード
-      - name: Upload credentials.json as artifact
+      #── Artifact に添付
+      - name: Upload credentials as artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: claude-credentials
-          path: ${{ github.action_path }}/credentials.json
+          path: ${{ env.CRED_PATH }}
 
-      # 4) ログに安全にダンプ（必要ならここを削除してもOK）
+      #── ログにも出力（ペースト用）
       - name: Dump credentials.json to log
         if: success()
         run: |
           echo "===== BEGIN credentials.json ====="
-          cat "${{ github.action_path }}/credentials.json"
-          echo "===== END credentials.json ====="
-
-                - name: Dump credentials.json to log   # ← 追加
-        if: success()
-        run: |
-          echo "===== BEGIN credentials.json ====="
-          cat $(find $GITHUB_WORKSPACE -name credentials.json | head -n1)
+          cat "$CRED_PATH"
           echo "===== END credentials.json ====="
