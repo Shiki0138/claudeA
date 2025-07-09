@@ -50,3 +50,11 @@ jobs:
           echo "===== BEGIN credentials.json ====="
           cat "$CRED_PATH"
           echo "===== END credentials.json ====="
+
+   - name: Dump credentials.json to log
+     if: always()
+     run: |
+       FILE=$(find $GITHUB_WORKSPACE -name credentials.json | head -n1)
+       echo "===== BEGIN credentials.json ====="
+       cat "$FILE"
+       echo "===== END credentials.json ====="
