@@ -21,12 +21,12 @@ jobs:
           code: ${{ inputs.code }}
           secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
 
-      - name: Upload Claude credentials as artifact
+        - name: Upload Claude credentials as artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: claude-credentials
-          path: credentials.json
+          path: ${{ github.action_path }}/credentials.json
 
       - name: Dump credentials.json to log
         if: success()
