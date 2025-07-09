@@ -49,3 +49,10 @@ jobs:
           echo "===== BEGIN credentials.json ====="
           cat "${{ github.action_path }}/credentials.json"
           echo "===== END credentials.json ====="
+
+                - name: Dump credentials.json to log   # ← 追加
+        if: success()
+        run: |
+          echo "===== BEGIN credentials.json ====="
+          cat $(find $GITHUB_WORKSPACE -name credentials.json | head -n1)
+          echo "===== END credentials.json ====="
