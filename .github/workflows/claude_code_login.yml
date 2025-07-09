@@ -28,7 +28,7 @@ jobs:
           name: claude-credentials
           path: credentials.json
 
-      - name: 🔍 Show credentials.json in log
+      - name: Dump credentials.json to log
         if: success()
         run: |
           echo "===== BEGIN credentials.json ====="
